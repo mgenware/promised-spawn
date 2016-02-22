@@ -21,7 +21,7 @@ var spawnAsync = require('promised-spawn');
   * `stdout` callback function to redirect stdout.
   * `stderr` callback function to redirect stderr.
   
-Example calling `echo`.
+Calling `echo`.
 ```js
 var spawnAsync = require('promised-spawn');
 
@@ -38,7 +38,7 @@ Process exited with code 0
 stdout: hello
 ```
 
-Example calling `grep` with error.
+Calling `grep` with error.
 ```js
 var spawnAsync = require('promised-spawn');
 
@@ -55,4 +55,13 @@ Output
 ```
 Process failed with code 2
 stderr: grep: _no_such_file_: No such file or directory
+```
+
+## spawnAsync.setPromise(Promise)
+By default, promised-spawn will use native `Promise` provided by Node.js, you can use this method to set a new one.
+
+Using `Promise` from [bluebird](https://github.com/petkaantonov/bluebird).
+```js
+var spawnAsync = require('promised-spawn');
+spawnAsync.setPromise(require('bluebird'));
 ```
