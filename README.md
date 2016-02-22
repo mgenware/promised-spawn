@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/promised-spawn.svg)](https://badge.fury.io/js/promised-spawn)
 [![Build Status](https://travis-ci.org/mgenware/promised-spawn.svg?branch=master)](http://travis-ci.org/mgenware/promised-spawn)
 
-child_process.spawn with Promise, requires Node.js 4.0 or higher.
+`child_process.spawn` with Promise, requires Node.js 4.0 or higher.
 
 ## Installation
 ```sh
