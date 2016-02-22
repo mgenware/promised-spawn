@@ -21,7 +21,7 @@ var spawnAsync = require('promised-spawn');
   * `stdout` callback function to redirect stdout.
   * `stderr` callback function to redirect stderr.
   
-Example calling `echo`
+Example calling `echo`.
 ```js
 var spawnAsync = require('promised-spawn');
 
@@ -36,4 +36,23 @@ Output
 ```
 Process exited with code 0
 stdout: hello
+```
+
+Example calling `grep` with error.
+```js
+var spawnAsync = require('promised-spawn');
+
+var stderr = '';
+spawnAsync(['grep', ['find', '_no_such_file_']], {stderr: data => stderr += data}).then(() => {
+    console.log('Process succeeded');
+}).catch(err => {
+    console.log(`Process failed with code ${err.code}`);
+    console.log(`stderr: ${stderr}`);
+});
+```
+
+Output
+```
+Process failed with code 2
+stderr: grep: _no_such_file_: No such file or directory
 ```
