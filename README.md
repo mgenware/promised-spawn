@@ -5,17 +5,17 @@
 
 `child_process.spawn` with Promise, requires Node.js 4.0 or higher.
 
-## Installation
+# Installation
 ```sh
 npm install promised-spawn --save
 ```
 
-## API
+# API
 ```js
 var spawnAsync = require('promised-spawn');
 ```
 
-### spawnAsync(originalSpawnArguments, options)
+## spawnAsync(originalSpawnArguments, options)
 * `originalSpawnArguments` should be an array, which will be passed to `child_process.spawn`. See [official docs of child_process.spawn](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options)
 * `options` available options:
   * `stdout` callback function to redirect stdout.
