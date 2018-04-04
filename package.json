@@ -1,6 +1,6 @@
 {
   "name": "promised-spawn",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "child_process.spawn with Promise",
   "main": "lib/main.js",
   "author": "Mgen (https://www.mgenware.com)",
