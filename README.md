@@ -1,67 +1,146 @@
 # promised-spawn
 
-[![npm version](https://badge.fury.io/js/promised-spawn.svg)](https://badge.fury.io/js/promised-spawn)
-[![Build Status](https://travis-ci.org/mgenware/promised-spawn.svg?branch=master)](http://travis-ci.org/mgenware/promised-spawn)
+spawn + Promise + live data chunks + merged output of stdout and stderr.
 
-`child_process.spawn` with Promise, requires Node.js 4.0 or higher.
+## Installation
 
-# Installation
 ```sh
-npm install promised-spawn --save
+npm i promised-spawn
 ```
 
-# API
-```js
-var spawnAsync = require('promised-spawn');
+## Usage
+
+Simple echo command:
+
+```ts
+import spawn from 'promised-spawn';
+
+const output = await spawn('echo', ['a', 'b bb']);
+/*
+ output.stdout: 'a b bb'
+*/
 ```
 
-## spawnAsync(originalSpawnArguments, options)
-* `originalSpawnArguments` should be an array, which will be passed to `child_process.spawn`. See [official docs of child_process.spawn](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options)
-* `options` available options:
-  * `stdout` callback function to redirect stdout.
-  * `stderr` callback function to redirect stderr.
-  
-Calling `echo`.
-```js
-var spawnAsync = require('promised-spawn');
+Merged output of stdio and stderr:
 
-var stdout = '';
-spawnAsync(['echo', ['hello']], {stdout: data => stdout += data}).then(retCode => {
-    console.log(`Process exited with code ${retCode}`);
-    console.log(`stdout: ${stdout}`);
+```ts
+import spawn from 'promised-spawn';
+
+const output = await spawn('<a long task>', [], { mergedOutput: true });
+/*
+ output.stdout:
+ log1
+ log2
+ log3
+
+ output.stderr:
+ err1
+ err2
+
+ output.merged:
+ log1
+ err1
+ log2
+ err3
+ log3
+*/
+```
+
+Capture live data chunks:
+
+```ts
+import spawn from 'promised-spawn';
+
+const out: Buffer[] = [];
+const err: Buffer[] = [];
+await spawn('<a long task>', [], {
+  liveOutput: (chunk, type) => {
+    if (type === 'stdout') {
+      out.push(chunk);
+    } else if (type === 'stderr') {
+      err.push(chunk);
+    }
+  },
 });
+
+console.log(Buffer.concat(out).toString());
+console.log(Buffer.concat(err).toString());
+
+/*
+ out:
+ log1
+ log2
+ log3
+
+ err:
+ err1
+ err2
+*/
 ```
 
-Output
-```
-Process exited with code 0
-stdout: hello
+Handle errors:
+
+```ts
+import spawn, { SpawnError } from 'promised-spawn';
+
+try {
+  const output = await spawn('<a long task>', [], { mergedOutput: true });
+} catch (err) {
+  if (err instanceof SpawnError) {
+    console.log(err.output);
+    console.log(err.message);
+  }
+}
+/*
+ err.output.stdout:
+ log1
+ log2
+ log3
+
+ err.output.stderr:
+ err1
+ err2
+
+ err.output.merged:
+ log1
+ err1
+ log2
+ err3
+ log3
+
+ err.message:
+ Processed exited with code 1.
+*/
 ```
 
-Calling `grep` with error.
-```js
-var spawnAsync = require('promised-spawn');
+## API
 
-var stderr = '';
-spawnAsync(['grep', ['find', '_no_such_file_']], {stderr: data => stderr += data}).then(() => {
-    console.log('Process succeeded');
-}).catch(err => {
-    console.log(`Process failed with code ${err.code}`);
-    console.log(`stderr: ${stderr}`);
-});
-```
+```ts
+export interface SpawnOptions {
+  // Options passed to node spawn.
+  spawnOptions?: SpawnOptionsWithoutStdio;
+  // Used to capture live IO chunks.
+  liveOutput?: (chunk: Buffer, source: 'stdout' | 'stderr') => void;
+  // Whether merging stdio and stderr is enabled.
+  // Once enabled, use `SpawnOutput.merge` to get merged output.
+  mergedOutput?: boolean;
+}
 
-Output
-```
-Process failed with code 2
-stderr: grep: _no_such_file_: No such file or directory
-```
+// Output of a spawn operation.
+// If the spawn succeeded, it's returned as the result of promise.
+// Otherwise, you can grab the output via `SpawnError.output`.
+export interface SpawnOutput {
+  // Output of stdout.
+  stdout: string;
+  // Output of stderr.
+  stderr: string;
+  // Merged output of stdio and stderr.
+  // Only applicable when `SpawnOptions.mergedOutput` is true.
+  merged: string;
+}
 
-## spawnAsync.setPromise(Promise)
-By default, promised-spawn will use native `Promise` provided by Node.js, you can use this method to set a new one.
+// The error type when spawn promise is rejected.
+export class SpawnError extends Error;
 
-Using `Promise` from [bluebird](https://github.com/petkaantonov/bluebird).
-```js
-var spawnAsync = require('promised-spawn');
-spawnAsync.setPromise(require('bluebird'));
+export default function spawnAsync(command: string, args?: string[], opts?: SpawnOptions);
 ```
