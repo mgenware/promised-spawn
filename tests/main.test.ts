@@ -1,3 +1,4 @@
+/* eslint-disable prefer-template */
 import * as assert from 'assert';
 import spawn, { SpawnOutput, SpawnError, SpawnOptions } from '../dist/main.js';
 
@@ -10,6 +11,7 @@ function checkOutput(output: SpawnOutput, stdout: string, stderr: string, merged
 function checkError(err: unknown, message: string, stdout: string, stderr: string, merged: string) {
   assert.ok(err instanceof SpawnError);
   assert.strictEqual(err.message, message);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   checkOutput(err.output, stdout, stderr, merged);
 }
 
@@ -49,11 +51,18 @@ it('Live', async () => {
   const out: Buffer[] = [];
   const err: Buffer[] = [];
   const output = await spawnLive({
-    liveOutput: (chunk, type) => {
-      if (type === 'stdout') {
-        out.push(chunk);
-      } else if (type === 'stderr') {
-        err.push(chunk);
+    liveOutput: (chunk: Buffer, type) => {
+      switch (type) {
+        case 'stdout': {
+          out.push(chunk);
+          break;
+        }
+        case 'stderr': {
+          err.push(chunk);
+          break;
+        }
+        default:
+          throw new Error(`Unknown type ${type}`);
       }
     },
   });
@@ -69,7 +78,7 @@ it('Merged output', async () => {
 
 it('Merged output (error)', async () => {
   try {
-    await await spawnLive({ mergedOutput: true }, true);
+    await spawnLive({ mergedOutput: true }, true);
     assert.ok(0);
   } catch (err) {
     checkError(
