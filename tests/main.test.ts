@@ -2,10 +2,20 @@
 import * as assert from 'assert';
 import spawn, { SpawnOutput, SpawnError, SpawnOptions } from '../dist/main.js';
 
+const windows = process.platform === 'win32';
+
+function sortLines(str: string): string[] {
+  return str.split(/\r?\n/).sort((a, b) => a.localeCompare(b));
+}
+
+function checkInterleavedOutput(a: string, b: string) {
+  assert.deepStrictEqual(sortLines(a), sortLines(b));
+}
+
 function checkOutput(output: SpawnOutput, stdout: string, stderr: string, merged: string) {
   assert.strictEqual(output.stdout, stdout);
   assert.strictEqual(output.stderr, stderr);
-  assert.strictEqual(output.merged, merged);
+  checkInterleavedOutput(output.merged, merged);
 }
 
 function checkError(err: unknown, message: string, stdout: string, stderr: string, merged: string) {
@@ -19,6 +29,11 @@ function spawnLive(opts: SpawnOptions, error?: boolean) {
   return spawn('node', ['tests/cmd/live.js', error ? 'panic' : '1  2', '🌏'], opts);
 }
 
+// Used in windows tests as `echo` is not callable in windows.
+function matchNodeVer(s: string) {
+  assert.match(s, /v\d+\.\d+.\d+/);
+}
+
 const liveStdoutOut = "log 🏃‍♀️🏃‍♂️🏃\nlog 🏃‍♀️🏃‍♂️🏃\nlog 🏃‍♀️🏃‍♂️🏃\n[ '1  2', '🌏' ]";
 const liveErrStdoutOut = "log 🏃‍♀️🏃‍♂️🏃\nlog 🏃‍♀️🏃‍♂️🏃\nlog 🏃‍♀️🏃‍♂️🏃\n[ 'panic', '🌏' ]";
 const liveStderrOut = 'error 🏃‍♀️🏃‍♂️🏃\nerror 🏃‍♀️🏃‍♂️🏃\nerror 🏃‍♀️🏃‍♂️🏃';
@@ -28,24 +43,33 @@ const liveErrMergedOut =
   "log 🏃‍♀️🏃‍♂️🏃\nerror 🏃‍♀️🏃‍♂️🏃\nlog 🏃‍♀️🏃‍♂️🏃\nerror 🏃‍♀️🏃‍♂️🏃\nlog 🏃‍♀️🏃‍♂️🏃\nerror 🏃‍♀️🏃‍♂️🏃\n[ 'panic', '🌏' ]";
 
 it('Success', async () => {
-  const output = await spawn('echo', ['a', 'b bb']);
-  checkOutput(output, 'a b bb', '', '');
-});
-
-it('Error', async () => {
-  try {
-    await spawn('grep', ['find', '_no_such_file_']);
-    assert.ok(0);
-  } catch (err) {
-    checkError(
-      err,
-      'Process exited with code 2',
-      '',
-      'grep: _no_such_file_: No such file or directory',
-      '',
-    );
+  if (windows) {
+    const output = await spawn('node', ['-v']);
+    matchNodeVer(output.stdout);
+    assert.strictEqual(output.stderr, '');
+    assert.strictEqual(output.merged, '');
+  } else {
+    const output = await spawn('echo', ['a', 'b bb']);
+    checkOutput(output, 'a b bb', '', '');
   }
 });
+
+if (!windows) {
+  it('Error', async () => {
+    try {
+      await spawn('grep', ['find', '_no_such_file_']);
+      assert.ok(0);
+    } catch (err) {
+      checkError(
+        err,
+        'Process exited with code 2',
+        '',
+        'grep: _no_such_file_: No such file or directory',
+        '',
+      );
+    }
+  });
+}
 
 it('Live', async () => {
   const out: Buffer[] = [];
