@@ -2,22 +2,30 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ['16', '14']
-    name: Node ${{ matrix.node }}
+        os:
+          - ubuntu-latest
+          - windows-latest
+        node_version:
+          - 14
+          - 16
+        architecture:
+          - x64
+    name: Node ${{ matrix.node_version }} - ${{ matrix.architecture }} on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node_version }}
+          architecture: ${{ matrix.architecture }}
       - run: npm i
-      - run: npm test
+      - run: npm run test

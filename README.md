@@ -1,6 +1,10 @@
 # promised-spawn
 
-spawn + Promise + live data chunks + merged output of stdout and stderr.
+[![Build Status](https://github.com/mgenware/promised-spawn/workflows/Build/badge.svg)](https://github.com/mgenware/promised-spawn/actions)
+[![npm version](https://img.shields.io/npm/v/promised-spawn.svg?style=flat-square)](https://npmjs.com/package/promised-spawn)
+[![Node.js Version](http://img.shields.io/node/v/promised-spawn.svg?style=flat-square)](https://nodejs.org/en/)
+
+`child_process.spawn` + Promise API + live data chunks + merged output of stdout and stderr.
 
 ## Installation
 
