@@ -1,6 +1,6 @@
 {
   "name": "promised-spawn",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "`child_process.spawn` + Promise API + live data chunks + merged output of stdout and stderr",
   "type": "module",
   "exports": "./dist/main.js",
